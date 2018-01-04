@@ -1,5 +1,5 @@
-import { SHA256 } from 'cryptojs';
-import { BehaviorSubject } from 'rxjs';
+import { Crypto } from 'cryptojs';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Block } from './block';
 
 export class NaiveBlockChain {
@@ -7,8 +7,7 @@ export class NaiveBlockChain {
     public blockchain: BehaviorSubject<Block[]>;
 
     constructor() {
-        this.blockchain = BehaviorSubject.create();
-        this.blockchain.next([this.generateGenesisBlock()]);
+        this.blockchain = new BehaviorSubject([this.generateGenesisBlock()]);
     }
 
     /**
@@ -26,7 +25,7 @@ export class NaiveBlockChain {
      * @param data 
      */
     private calculateHash(index: number, previousHash: String, timestamp: number, data: String) {
-        return SHA256(`${index}${previousHash}${timestamp}${data}`);
+        return Crypto.SHA256(`${index}${previousHash}${timestamp}${data}`);
     }
 
     /**
@@ -44,16 +43,13 @@ export class NaiveBlockChain {
      */
     private isValidNewBlock(newBlock: Block, previousBlock: Block) {
         if(previousBlock.index + 1 !== newBlock.index) {
-            console.error('Invalid Index');
-            return false;
+            throw new Error('Invalid Index');
         }
         if(previousBlock.hash !== newBlock.previousHash) {
-            console.error('Invalid previous hash');
-            return false;
+            throw new Error('Invalid previous hash');
         }
         if(this.calculateHashForBlock(newBlock) !== newBlock.hash) {
-            console.error(`Invalid hash- expected: ${this.calculateHashForBlock(newBlock)}, received ${newBlock.hash}`);
-            return false;
+            throw new Error(`Invalid hash- expected: ${this.calculateHashForBlock(newBlock)}, received ${newBlock.hash}`);
         }
 
         return true;
@@ -68,7 +64,7 @@ export class NaiveBlockChain {
 
         const currentChain = this.blockchain.getValue(),
             [lastBlock] = currentChain.slice(-1),
-            nextIndex = lastBlock.index++,
+            nextIndex = (lastBlock.index + 1),
             timestamp = Date.now(),
             hash = this.calculateHash(nextIndex, lastBlock.hash, timestamp, blockData);
 
