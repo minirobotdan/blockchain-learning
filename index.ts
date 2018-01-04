@@ -72,7 +72,7 @@ export class NaiveBlockChain {
 
         if(this.isValidNewBlock(newBlock, lastBlock)) {
             newChain = currentChain.concat([newBlock]);
-            console.info('New block added', newBlock);
+            console.info('New block added');
             this.blockchain.next(newChain);
             return newBlock;
         } else {
